@@ -1,0 +1,149 @@
+-- |
+-- Module      :  Language.C.Syntax.AST
+-- Copyright   :  (c) 2019 Ariel Favio Carrizo
+-- License     :  BSD-3-Clause
+-- Stability   : experimental
+-- Portability : ghc
+
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE GADTs #-}
+
+module Esferixis.Jumpy.Ast where
+
+import Text.Show
+import Data.Word
+import Data.Maybe
+
+class (Show ni) => JLocInfo ni
+
+data JNode n ni = JNode n ni
+
+data JTranslUnit ni = JTranslUnit ([JNode (JNonLocalDeclSt ni) ni])
+
+data JNonLocalDeclSt ni =
+   JNamespaceDeclSt (JNamespaceDecl ni) |
+   JTypeDeclSt (JTypeDecl ni) |
+   JFunDeclSt (JFunDecl ni) |
+   JContScopeSt (JContScopeDesc ni)
+
+data JNamespaceDecl ni = JNamespaceDecl {
+   jNamespaceDeclName :: JNode String ni,
+   jNamespaceDeclStatements :: [JNode (JNonLocalDeclSt ni) ni]
+   }
+
+data JVarDeclDesc ni = JVarDeclDesc {
+   jVarDeclDescName :: JNode String ni,
+   jVarDeclDescType :: JNode (JDataTypeId ni) ni
+   }
+
+data JTypeDecl ni = JTypeDecl {
+   jTypeDeclName :: JNode String ni,
+   jTypeDeclDesc :: JNode (JDataTypeDeclDesc ni) ni
+   }
+
+data JDataTypeDeclDesc ni =
+   JStructDeclDesc [JFieldDeclDesc ni] |
+   JUnionDeclDesc [JFieldDeclDesc ni] |
+   JAliasDeclDesc (JDataTypeId ni)
+
+data JFieldDeclDesc ni = JFieldDeclDesc {
+   jFieldDeclDescName :: JNode String ni,
+   jFieldDeclDescType :: JNode (JDataTypeId ni) ni
+   }
+
+data JDataTypeId ni =
+   JVoidId |
+   JBoolId |
+   JCharId |
+   JI8Id |
+   JI16Id |
+   JI32Id |
+   JI64Id |
+   JISizeId |
+   JU8Id |
+   JU16Id |
+   JU32Id |
+   JU64Id |
+   JUSizeId |
+   JF32Id |
+   JF64Id |
+   JFunTypeId (JFunTypeIdDesc ni) |
+   JContTypeId JCallingConvId |
+   JArrayId (JArrayIdDesc ni) |
+   JUserTypeId (JUserTypeIdDesc ni) |
+   JPtrId (JDataTypeId ni)
+
+data JArrayIdDesc ni = JArrayIdDesc {
+   jArrayIdElementType :: JNode (JDataTypeId ni) ni,
+   jArrayIdElementSize :: [JNode Word64 ni]
+   }
+
+data JUserTypeIdDesc ni = JUserTypeIdDesc {
+   jUserTypeIdName :: JNode String ni,
+   jUserTypeParam :: [JNode (JDataTypeId ni) ni]
+   }
+
+data JFunTypeIdDesc ni = JFunTypeIdDesc {
+   jFunTypeIdCallingConv :: JNode JCallingConvId ni,
+   jFunTypeIdArguments :: [JNode (JDataTypeId ni) ni],
+   jFunTypeIdReturnType :: JNode (JDataTypeId ni) ni
+   }
+
+data JCallingConvId = JCDeclCallingConvId
+
+data JFunDecl ni = JFunDecl {
+   jFunDeclName :: JNode String ni,
+   jFunDeclCallingConv :: JNode JCallingConvId ni,
+   jFunDeclArguments :: [JNode (JArgDeclDesc ni) ni],
+   jFunDeclReturnType :: JNode (JDataTypeId ni) ni,
+   jFunDeclBody :: Maybe (JNode (JInstrScope ni) ni)
+   }
+
+data JArgDeclDesc ni = JArgDeclDesc {
+   jArgDeclDescName :: JNode String ni,
+   jArgDeclDescType :: JNode (JDataTypeId ni) ni
+   }
+
+data JContScopeDesc ni = JContScopeDesc {
+   jContScopeDataDecl :: JNode (JContScopeDataDecl ni) ni,
+   jContScopeLabelStatements :: [JNode (JContScopeLabelDecl ni) ni]
+   }
+
+data JContScopeDataDecl ni =
+   JContScopeLexicalScopedDataDecl (JUserTypeIdDesc ni) |
+   JContScopeNamedDataDecl (JVarDeclDesc ni)
+
+data JContScopeLabelDecl ni = JContScopeLabelDecl {
+   jContScopeLabelDeclName :: JNode String ni,
+   jContScopeLabelDeclInstrScope :: JNode (JInstrScope ni) ni
+   }
+
+data JInstrScope ni = JInstrScope [JNode (JInstrScopeSt ni) ni]
+
+data JInstrScopeSt ni =
+   JInstrScopeTypeDeclSt (JTypeDecl ni) |
+   JInstrScopeFunDeclSt (JFunDecl ni) |
+   JInstrScopeVarDeclSt (JVarDeclDesc ni) |
+   JAssignationSt (JAssignationStDesc ni) |
+   JIfSt (JIfStDesc ni)
+
+data JAssignationStDesc ni = JAssignationStDesc {
+   jAssignationStDstOp :: JNode (JValDstSt ni) ni,
+   jAssignationStSrcOp :: JNode (JValSrcSt ni) ni
+   }
+
+data JIfStDesc ni = JIfStDesc {
+   jIfStSrcOp :: JValSrcSt ni,
+   jIfStTrueScope :: JNode (JInstrScope ni) ni,
+   jIfStFalseCase :: Maybe ( JNode (JIfAnotherCaseSt ni) ni )
+   }
+
+data JIfAnotherCaseSt ni =
+   JElseIfSt ( JIfStDesc ni ) |
+   JElseSt ( JNode (JInstrScope ni) ni )
+
+data JValDstSt ni = JValDstSt ni
+
+data JValSrcSt ni = JValSrcSt ni
