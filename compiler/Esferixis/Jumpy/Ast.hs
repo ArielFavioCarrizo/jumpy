@@ -132,6 +132,7 @@ data JInstrScopeSt ni =
    JIfSt (JIfStDesc ni) |
    JWhileSt (JWhileStDesc ni) |
    JDoWhileSt (JWhileStDesc ni) |
+   JForSt (JForStDesc ni) |
    JBreakSt |
    JContinueSt |
    JReturnSt |
@@ -157,8 +158,28 @@ data JWhileStDesc ni = JWhileStDesc {
    jWhileStDescInstrScope :: JNode (JInstrScopeSt ni) ni
    }
 
+data JForStDesc ni = JForStDesc {
+   jForStDescInitialScope :: JNode (JInstrScopeSt ni) ni,
+   jForStDescIterationScope :: JNode (JInstrScopeSt ni) ni,
+   jForStDescPreNextIterationScope :: JNode (JInstrScopeSt ni) ni
+   }
+
 data JValDstSt ni = JValDstSt ni
 
 data JValSrcSt ni = JValSrcSt {
-   
+   jValSrcStAddSt :: (JNode (JValSrcSt ni) ni, JNode (JValSrcSt ni) ni),
+   jValSrcStSubSt :: (JNode (JValSrcSt ni) ni, JNode (JValSrcSt ni) ni),
+   jValSrcStMulSt :: (JNode (JValSrcSt ni) ni, JNode (JValSrcSt ni) ni),
+   jValSrcStDivSt :: (JNode (JValSrcSt ni) ni, JNode (JValSrcSt ni) ni),
+   jValSrcStModSt :: (JNode (JValSrcSt ni) ni, JNode (JValSrcSt ni) ni),
+   jValSrcStPostIncrementSt :: JNode (JValSrcSt ni) ni,
+   jValSrcStPreIncrementSt :: JNode (JValSrcSt ni) ni,
+   jValSrcStPostDecrementSt :: JNode (JValSrcSt ni) ni,
+   jValSrcStPreDecrementSt :: JNode (JValSrcSt ni) ni,
+   jValSrcStBitwiseAndOp :: (JNode (JValSrcSt ni) ni, JNode (JValSrcSt ni) ni),
+   jValSrcStBitwiseOrOp :: (JNode (JValSrcSt ni) ni, JNode (JValSrcSt ni) ni),
+   jValSrcStBitwiseXorOp :: (JNode (JValSrcSt ni) ni, JNode (JValSrcSt ni) ni),
+   jValSrcStBitwiseNotOp :: JNode (JValSrcSt ni) ni,
+   jValSrcStBitwiseLeftShiftOp :: (JNode (JValSrcSt ni) ni, JNode (JValSrcSt ni) ni),
+   jValSrcStBitwiseRightShiftOp :: (JNode (JValSrcSt ni) ni, JNode (JValSrcSt ni) ni)
    }
