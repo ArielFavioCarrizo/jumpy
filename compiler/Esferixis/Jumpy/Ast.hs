@@ -20,17 +20,17 @@ class (Show ni) => JLocInfo ni
 
 data JNode n ni = JNode n ni
 
-data JTranslUnit ni = JTranslUnit ([JNode (JNonLocalDeclSt ni) ni])
+data JTranslUnit ni = JTranslUnit ([JNode (JNamespaceScopeSt ni) ni])
 
-data JNonLocalDeclSt ni =
+data JNamespaceScopeSt ni =
    JNamespaceDeclSt (JNamespaceDecl ni) |
-   JTypeDeclSt (JTypeDecl ni) |
+   JUserTypeDeclSt (JUserTypeDecl ni) |
    JFunDeclSt (JFunDecl ni) |
    JContScopeSt (JContScopeDesc ni)
 
 data JNamespaceDecl ni = JNamespaceDecl {
    jNamespaceDeclName :: JNode String ni,
-   jNamespaceDeclStatements :: [JNode (JNonLocalDeclSt ni) ni]
+   jNamespaceDeclStatements :: [JNode (JNamespaceScopeSt ni) ni]
    }
 
 data JVarDeclDesc ni = JVarDeclDesc {
@@ -38,12 +38,13 @@ data JVarDeclDesc ni = JVarDeclDesc {
    jVarDeclDescType :: JNode (JDataTypeId ni) ni
    }
 
-data JTypeDecl ni = JTypeDecl {
-   jTypeDeclName :: JNode String ni,
-   jTypeDeclDesc :: JNode (JDataTypeDeclDesc ni) ni
+data JUserTypeDecl ni = JTypeDecl {
+   jUserTypeDeclName :: JNode String ni,
+   jUserTypeDeclGenericParams :: [JNode String ni],
+   jUserTypeDeclDesc :: JNode (JUserTypeDeclDesc ni) ni
    }
 
-data JDataTypeDeclDesc ni =
+data JUserTypeDeclDesc ni =
    JStructDeclDesc [JFieldDeclDesc ni] |
    JUnionDeclDesc [JFieldDeclDesc ni] |
    JAliasDeclDesc (JDataTypeId ni)
@@ -72,17 +73,18 @@ data JDataTypeId ni =
    JFunTypeId (JFunTypeIdDesc ni) |
    JContTypeId JCallingConvId |
    JArrayId (JArrayIdDesc ni) |
-   JUserTypeId (JUserTypeIdDesc ni) |
-   JPtrId (JDataTypeId ni)
+   JUserTypeId (String) |
+   JPtrId (JDataTypeId ni) |
+   JGenericDataTypeId (JGenericDataTypeIdDesc ni)
+
+data JGenericDataTypeIdDesc ni = JGenericDataTypeIdDesc {
+   jGenericDataTypeIdDescGenericParams :: [JNode (JDataTypeId ni) ni],
+   jGenericDataTypeIdDescWrappedType :: JNode (JDataTypeId ni) ni
+}
 
 data JArrayIdDesc ni = JArrayIdDesc {
    jArrayIdElementType :: JNode (JDataTypeId ni) ni,
    jArrayIdElementSize :: [JNode Word64 ni]
-   }
-
-data JUserTypeIdDesc ni = JUserTypeIdDesc {
-   jUserTypeIdName :: JNode String ni,
-   jUserTypeParam :: [JNode (JDataTypeId ni) ni]
    }
 
 data JFunTypeIdDesc ni = JFunTypeIdDesc {
@@ -95,7 +97,7 @@ data JCallingConvId = JCDeclCallingConvId
 
 data JFunDecl ni = JFunDecl {
    jFunDeclName :: JNode String ni,
-   jFunDeclCallingConv :: JNode JCallingConvId ni,
+   jFunDeclCallingConv :: Maybe (JNode JCallingConvId ni),
    jFunDeclArguments :: [JNode (JArgDeclDesc ni) ni],
    jFunDeclReturnType :: JNode (JDataTypeId ni) ni,
    jFunDeclBody :: Maybe (JNode (JInstrScope ni) ni)
@@ -112,7 +114,7 @@ data JContScopeDesc ni = JContScopeDesc {
    }
 
 data JContScopeDataDecl ni =
-   JContScopeLexicalScopedDataDecl (JUserTypeIdDesc ni) |
+   JContScopeLexicalScopedDataDecl (JDataTypeId ni) |
    JContScopeNamedDataDecl (JVarDeclDesc ni)
 
 data JContScopeLabelDecl ni = JContScopeLabelDecl {
@@ -123,11 +125,17 @@ data JContScopeLabelDecl ni = JContScopeLabelDecl {
 data JInstrScope ni = JInstrScope [JNode (JInstrScopeSt ni) ni]
 
 data JInstrScopeSt ni =
-   JInstrScopeTypeDeclSt (JTypeDecl ni) |
+   JInstrScopeUserTypeDeclSt (JUserTypeDecl ni) |
    JInstrScopeFunDeclSt (JFunDecl ni) |
    JInstrScopeVarDeclSt (JVarDeclDesc ni) |
    JAssignationSt (JAssignationStDesc ni) |
-   JIfSt (JIfStDesc ni)
+   JIfSt (JIfStDesc ni) |
+   JWhileSt (JWhileStDesc ni) |
+   JDoWhileSt (JWhileStDesc ni) |
+   JBreakSt |
+   JContinueSt |
+   JReturnSt |
+   JGoToSt (JValSrcSt ni)
 
 data JAssignationStDesc ni = JAssignationStDesc {
    jAssignationStDstOp :: JNode (JValDstSt ni) ni,
@@ -144,6 +152,13 @@ data JIfAnotherCaseSt ni =
    JElseIfSt ( JIfStDesc ni ) |
    JElseSt ( JNode (JInstrScope ni) ni )
 
+data JWhileStDesc ni = JWhileStDesc {
+   jWhileStDescConditionValue :: JNode (JValSrcSt ni) ni,
+   jWhileStDescInstrScope :: JNode (JInstrScopeSt ni) ni
+   }
+
 data JValDstSt ni = JValDstSt ni
 
-data JValSrcSt ni = JValSrcSt ni
+data JValSrcSt ni = JValSrcSt {
+   
+   }
