@@ -38,10 +38,14 @@ data JVarDeclDesc ni = JVarDeclDesc {
    jVarDeclDescType :: JNode (JDataTypeId ni) ni
    }
 
+data JTypeDeclParam ni =
+   JTypeDeclGenericParam (JNode String ni) |
+   JTypeDeclTemplateParam (JNode String ni)
+
 data JUserTypeDecl ni = JTypeDecl {
    jUserTypeDeclName :: JNode String ni,
-   jUserTypeDeclGenericParams :: [JNode String ni],
-   jUserTypeDeclDesc :: JNode (JUserTypeDeclDesc ni) ni
+   jUserTypeDeclParams :: [JNode (JTypeDeclParam ni) ni],
+   jUserTypeDeclDesc :: Maybe (JNode (JUserTypeDeclDesc ni) ni)
    }
 
 data JUserTypeDeclDesc ni =
@@ -53,6 +57,10 @@ data JFieldDeclDesc ni = JFieldDeclDesc {
    jFieldDeclDescName :: JNode String ni,
    jFieldDeclDescType :: JNode (JDataTypeId ni) ni
    }
+
+data JDataCellTypeId ni =
+   JConstId ( JNode (JDataTypeId ni) ni ) |
+   JMutableId ( JNode (JDataTypeId ni) ni )
 
 data JDataTypeId ni =
    JVoidId |
@@ -72,17 +80,17 @@ data JDataTypeId ni =
    JF64Id |
    JFunTypeId (JFunTypeIdDesc ni) |
    JContTypeId JCallingConvId |
-   JArrayId (JArrayIdDesc ni) |
+   JArrayTypeId (JArrayTypeIdDesc ni) |
    JUserTypeId (String) |
-   JPtrId (JDataTypeId ni) |
-   JGenericDataTypeId (JGenericDataTypeIdDesc ni)
+   JPtrId (JDataCellTypeId ni) |
+   JParametrizedDataTypeId (JParametrizedDataTypeIdDesc ni)
 
-data JGenericDataTypeIdDesc ni = JGenericDataTypeIdDesc {
+data JParametrizedDataTypeIdDesc ni = JParametrizedDataTypeIdDesc {
    jGenericDataTypeIdDescGenericParams :: [JNode (JDataTypeId ni) ni],
    jGenericDataTypeIdDescWrappedType :: JNode (JDataTypeId ni) ni
 }
 
-data JArrayIdDesc ni = JArrayIdDesc {
+data JArrayTypeIdDesc ni = JArrayIdDesc {
    jArrayIdElementType :: JNode (JDataTypeId ni) ni,
    jArrayIdElementSize :: [JNode Word64 ni]
    }
