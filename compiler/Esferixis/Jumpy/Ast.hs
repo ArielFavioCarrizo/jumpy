@@ -23,6 +23,11 @@ data JNode n ni = JNode n ni
 
 data JTranslUnit ni = JTranslUnit ([JNode (JNamespaceScopeSt ni) ni])
 
+data JLinkageType =
+   JPrivate |
+   JInternal |
+   JExternal
+
 data JNamespaceScopeSt ni =
    JNamespaceDeclSt (JNamespaceDecl ni) |
    JUserTypeDeclSt (JUserTypeDecl ni) |
@@ -36,7 +41,8 @@ data JNamespaceDecl ni = JNamespaceDecl {
 
 data JVarDeclDesc ni = JVarDeclDesc {
    jVarDeclDescName :: JNode String ni,
-   jVarDeclDescType :: JNode (JDataCellTypeId ni) ni
+   jVarDeclDescType :: JNode (JDataCellTypeId ni) ni,
+   jVarDeclLinkageType :: JLinkageType
    }
 
 data JTypeDeclParam ni =
@@ -106,7 +112,8 @@ data JFunDecl ni = JFunDecl {
    jFunDeclCallingConv :: Maybe (JNode JCallingConvId ni),
    jFunDeclArguments :: [JNode (JArgDeclDesc ni) ni],
    jFunDeclReturnType :: JNode (JDataTypeId ni) ni,
-   jFunDeclBody :: Maybe (JNode (JInstrScope ni) ni)
+   jFunDeclBody :: Maybe (JNode (JInstrScope ni) ni),
+   jFunDeclLinkageType :: JLinkageType
    }
 
 data JArgDeclDesc ni = JArgDeclDesc {
@@ -172,7 +179,7 @@ data JForStDesc ni = JForStDesc {
    }
 
 data JCallStDesc ni = JCallStDesc {
-   jCallStFunction :: ( JNode ( JValSrcSt ni ) ni ),
+   jCallStFunction :: JNode ( JValSrcSt ni ) ni,
    jCallStArguments :: [ JNode ( JValSrcSt ni ) ni ]
    }
 
@@ -218,12 +225,12 @@ data JLiteralSt ni =
    JF64LiteralSt Double
 
 data JValSrcTernaryOpStDesc ni = JValSrcTernaryOpStDesc {
-   jValSrcTernaryOpStDescSrcValue :: ( JNode ( JValSrcSt ni ) ni ),
-   jValSrcTernaryOpStDescTrueConditionValue :: ( JNode ( JValSrcSt ni ) ni ),
-   jValSrcTernaryOpStDescFalseConditionValue :: ( JNode ( JValSrcSt ni ) ni )
+   jValSrcTernaryOpStDescSrcValue :: JNode ( JValSrcSt ni ) ni,
+   jValSrcTernaryOpStDescTrueConditionValue :: JNode ( JValSrcSt ni ) ni,
+   jValSrcTernaryOpStDescFalseConditionValue :: JNode ( JValSrcSt ni ) ni
    }
 
 data JFieldStDesc ni = JValSrcFieldStDesc {
-   jValDataCellFieldStDescContainer :: ( JNode ( JValSrcSt ni ) ni ),
+   jValDataCellFieldStDescContainer :: JNode ( JValSrcSt ni ) ni,
    jValDataCellFieldStDescFieldName :: JNode String ni
    }
