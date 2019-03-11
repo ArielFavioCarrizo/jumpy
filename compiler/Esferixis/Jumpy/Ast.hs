@@ -1,5 +1,5 @@
 -- |
--- Module      :  Language.C.Syntax.AST
+-- Module      :  Esferixis.Jumpy.AST
 -- Copyright   :  (c) 2019 Ariel Favio Carrizo
 -- License     :  BSD-3-Clause
 -- Stability   : experimental
