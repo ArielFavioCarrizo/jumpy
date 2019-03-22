@@ -43,7 +43,7 @@ data JNamespaceDecl ni = JNamespaceDecl {
 data JVarDecl ni = JVarDeclDesc {
    jVarDeclDescName :: JNode String ni,
    jVarDeclDescType :: JNode (JDataCellTypeId ni) ni,
-   jVarDeclDescValue :: JNode (JDataCellSt ni) ni
+   jVarDeclDescValue :: JNode (JOperandSt ni) ni
    }
 
 data JTypeDeclParam ni =
@@ -148,15 +148,15 @@ data JInstrScopeSt ni =
    JContinueSt |
    JReturnSt |
    JInstrScopeCallSt (JCallStDesc ni) |
-   JGoToSt (JDataCellSt ni)
+   JGoToSt (JOperandSt ni)
 
 data JAssignationStDesc ni = JAssignationStDesc {
-   jAssignationStDstOp :: JNode (JDataCellSt ni) ni,
-   jAssignationStSrcOp :: JNode (JDataCellSt ni) ni
+   jAssignationStDstOp :: JNode (JOperandSt ni) ni,
+   jAssignationStSrcOp :: JNode (JOperandSt ni) ni
    }
 
 data JIfStDesc ni = JIfStDesc {
-   jIfStSrcOp :: JNode (JDataCellSt ni) ni,
+   jIfStSrcOp :: JNode (JOperandSt ni) ni,
    jIfStTrueScope :: JNode (JInstrScope ni) ni,
    jIfStFalseCase :: Maybe ( JNode (JIfAnotherCaseSt ni) ni )
    }
@@ -166,7 +166,7 @@ data JIfAnotherCaseSt ni =
    JElseSt ( JNode (JInstrScope ni) ni )
 
 data JWhileStDesc ni = JWhileStDesc {
-   jWhileStDescConditionValue :: JNode (JDataCellSt ni) ni,
+   jWhileStDescConditionValue :: JNode (JOperandSt ni) ni,
    jWhileStDescInstrScope :: JNode (JInstrScopeSt ni) ni
    }
 
@@ -177,38 +177,38 @@ data JForStDesc ni = JForStDesc {
    }
 
 data JCallStDesc ni = JCallStDesc {
-   jCallStFunction :: JNode ( JDataCellSt ni ) ni,
+   jCallStFunction :: JNode ( JOperandSt ni ) ni,
    jCallStArguments :: [ JNode ( JCallArg ni ) ni ]
    }
    
 data JCallArg ni = JCallArg {
    jCallArgName :: Maybe (JNode String ni),
-   jCallArgValue :: JNode (JDataCellSt ni) ni
+   jCallArgValue :: JNode (JOperandSt ni) ni
 }
 
-data JDataCellSt ni =
-   JValSrcLiteralSt (JLiteralSt ni) |
-   JValSrcIdentifierSt String |
-   JValSrcContValSt (JContVal ni) |
-   JValSrcDereferencePtrSt (JNode (JDataCellSt ni) ni) |
-   JValSrcFieldSt (JFieldId ni) |
-   JValSrcCallSt ( JCallStDesc ni ) |
-   JValSrcAddOpSt (JNode (JDataCellSt ni) ni, JNode (JDataCellSt ni) ni) |
-   JValSrcSubOpSt (JNode (JDataCellSt ni) ni, JNode (JDataCellSt ni) ni) |
-   JValSrcMulOpSt (JNode (JDataCellSt ni) ni, JNode (JDataCellSt ni) ni) |
-   JValSrcDivOpSt (JNode (JDataCellSt ni) ni, JNode (JDataCellSt ni) ni) |
-   JValSrcModOpSt (JNode (JDataCellSt ni) ni, JNode (JDataCellSt ni) ni) |
-   JValSrcPostIncrementSt ( JNode (JDataCellSt ni) ni ) |
-   JValSrcPreIncrementSt ( JNode (JDataCellSt ni) ni ) |
-   JValSrcPostDecrementSt ( JNode (JDataCellSt ni) ni ) |
-   JValSrcPreDecrementSt ( JNode (JDataCellSt ni) ni ) |
-   JValSrcBitwiseAndOpSt (JNode (JDataCellSt ni) ni, JNode (JDataCellSt ni) ni) |
-   JValSrcBitwiseOrOpSt (JNode (JDataCellSt ni) ni, JNode (JDataCellSt ni) ni) |
-   JValSrcBitwiseXorOpSt (JNode (JDataCellSt ni) ni, JNode (JDataCellSt ni) ni) |
-   JValSrcBitwiseNotOpSt ( JNode (JDataCellSt ni) ni ) |
-   JValSrcBitwiseLeftShiftOpSt (JNode (JDataCellSt ni) ni, JNode (JDataCellSt ni) ni) |
-   JValSrcBitwiseRightShiftOpSt (JNode (JDataCellSt ni) ni, JNode (JDataCellSt ni) ni) |
-   JValSrcTernaryOpSt ( JValSrcTernaryOpStDesc ni )
+data JOperandSt ni =
+   JOperandLiteralSt (JLiteralSt ni) |
+   JOperandIdentifierSt String |
+   JOperandContValSt (JContVal ni) |
+   JOperandDereferencePtrSt (JNode (JOperandSt ni) ni) |
+   JOperandFieldSt (JFieldId ni) |
+   JOperandCallSt ( JCallStDesc ni ) |
+   JOperandAddOpSt (JNode (JOperandSt ni) ni, JNode (JOperandSt ni) ni) |
+   JOperandSubOpSt (JNode (JOperandSt ni) ni, JNode (JOperandSt ni) ni) |
+   JOperandMulOpSt (JNode (JOperandSt ni) ni, JNode (JOperandSt ni) ni) |
+   JOperandDivOpSt (JNode (JOperandSt ni) ni, JNode (JOperandSt ni) ni) |
+   JOperandModOpSt (JNode (JOperandSt ni) ni, JNode (JOperandSt ni) ni) |
+   JOperandPostIncrementSt ( JNode (JOperandSt ni) ni ) |
+   JOperandPreIncrementSt ( JNode (JOperandSt ni) ni ) |
+   JOperandPostDecrementSt ( JNode (JOperandSt ni) ni ) |
+   JOperandPreDecrementSt ( JNode (JOperandSt ni) ni ) |
+   JOperandBitwiseAndOpSt (JNode (JOperandSt ni) ni, JNode (JOperandSt ni) ni) |
+   JOperandBitwiseOrOpSt (JNode (JOperandSt ni) ni, JNode (JOperandSt ni) ni) |
+   JOperandBitwiseXorOpSt (JNode (JOperandSt ni) ni, JNode (JOperandSt ni) ni) |
+   JOperandBitwiseNotOpSt ( JNode (JOperandSt ni) ni ) |
+   JOperandBitwiseLeftShiftOpSt (JNode (JOperandSt ni) ni, JNode (JOperandSt ni) ni) |
+   JOperandBitwiseRightShiftOpSt (JNode (JOperandSt ni) ni, JNode (JOperandSt ni) ni) |
+   JOperandTernaryOpSt ( JOperandTernaryOpStDesc ni )
 
 data JLiteralSt ni =
    JBoolLiteralSt Bool |
@@ -225,17 +225,17 @@ data JLiteralSt ni =
    JF64LiteralSt Double
    
 data JContVal ni = JContVal {
-   jContValIP :: JNode (JDataCellSt ni) ni,
-   jContValDataPtr :: JNode (JDataCellSt ni) ni
+   jContValIP :: JNode (JOperandSt ni) ni,
+   jContValDataPtr :: JNode (JOperandSt ni) ni
 }
 
-data JValSrcTernaryOpStDesc ni = JValSrcTernaryOpStDesc {
-   jValSrcTernaryOpStDescSrcValue :: JNode ( JDataCellSt ni ) ni,
-   jValSrcTernaryOpStDescTrueConditionValue :: JNode ( JDataCellSt ni ) ni,
-   jValSrcTernaryOpStDescFalseConditionValue :: JNode ( JDataCellSt ni ) ni
+data JOperandTernaryOpStDesc ni = JOperandTernaryOpStDesc {
+   jOperandTernaryOpStDescSrcValue :: JNode ( JOperandSt ni ) ni,
+   jOperandTernaryOpStDescTrueConditionValue :: JNode ( JOperandSt ni ) ni,
+   jOperandTernaryOpStDescFalseConditionValue :: JNode ( JOperandSt ni ) ni
    }
 
 data JFieldId ni = JFieldId {
-   jFieldIdContainer :: JNode ( JDataCellSt ni ) ni,
+   jFieldIdContainer :: JNode ( JOperandSt ni ) ni,
    jFieldIdName :: JNode String ni
    }
