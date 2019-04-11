@@ -21,23 +21,47 @@ class (Show ni) => JLocInfo ni
 
 data JNode n ni = JNode n ni
 
-data JTranslUnit ni = JTranslUnit (JNode (JNamespaceScopeSt ni) ni)
+data JTranslUnit ni = JTranslUnit [JNode (JModuleDecl ni) ni]
 
 data JLinkageType =
-   JPrivate |
-   JInternal |
-   JExternal
+   JPrivateLinkage |
+   JInternalLinkage |
+   JExternalLinkage
+   
+data JMemberAccess =
+   JPublicMember |
+   JPrivateMember
 
-data JNamespaceScopeSt ni =
-   JNamespaceDeclSt (JNamespaceDecl ni) |
-   JNamespaceUserTypeDeclSt (JUserTypeDecl ni) |
-   JNamespaceFunDeclSt (JFunDecl ni, JLinkageType) |
-   JNamespaceContextScopeSt (JContextScope ni) |
-   JNamespaceVarDeclSt (JVarDecl ni, JLinkageType)
-
-data JNamespaceDecl ni = JNamespaceDecl {
-   jNamespaceDeclName :: JNode String ni,
-   jNamespaceDeclStatements :: [JNode (JNamespaceScopeSt ni) ni]
+data JModuleDecl ni = JModuleDecl {
+   jModuleDeclName :: JNode String ni,
+   jModuleDeclMembers :: [JNode (JModuleSt ni) ni]
+   }
+   
+data JModuleSt ni =
+   JModuleMemberSt JMemberAccess (JModuleMemberStDesc ni) |
+   JModuleTypeInstanceSt (JTypeInstanceDecl ni)
+   
+data JModuleMemberStDesc ni =
+   JModuleTypeClassDecl (JTypeClassDecl ni) |
+   JModuleUserTypeDecl (JUserTypeDecl ni) |
+   JModuleFunDecl JLinkageType (JFunDecl ni) |
+   JModuleContextScopeSt (JContextScope ni) |
+   JModuleVarDecl JLinkageType (JVarDecl ni)
+   
+data JTypeConstraint ni = JTypeConstraint {
+   jTypeConstraintClassName :: JNode String ni, -- It could be a type class or a variant
+   jTypeConstraintParams :: [JNode String ni]
+   }
+   
+data JTypeClassDecl ni = JTypeClassDecl {
+   jTypeClassDeclName :: JNode String ni,
+   jTypeClassParams :: [JNode String ni],
+   jTypeClassMembers :: JFunPrototype ni
+   }
+   
+data JTypeInstanceDecl ni = JTypeInstanceDecl {
+   jTypeInstanceTypeConstraints :: [JNode (JTypeConstraint ni) ni],
+   jTypeInstanceMembers :: [JNode (JFunDecl ni) ni]
    }
 
 data JVarDecl ni = JVarDeclDesc {
@@ -57,9 +81,14 @@ data JUserTypeDecl ni = JTypeDecl {
    }
 
 data JUserTypeDeclDesc ni =
+   JVariant (JVariantDesc ni) |
    JStructDeclDesc [JFieldDeclDesc ni] |
    JUnionDeclDesc [JFieldDeclDesc ni] |
    JAliasDeclDesc (JDataTypeId ni)
+
+data JVariantDesc ni = JVariantDesc {
+   jVariantDescMembers :: [JNode (JDataTypeId ni) ni]
+}
 
 data JFieldDeclDesc ni = JFieldDeclDesc {
    jFieldDeclDescName :: JNode String ni,
@@ -108,11 +137,16 @@ data JFunTypeIdDesc ni = JFunTypeIdDesc {
 
 data JCallingConvId = JCDeclCallingConvId
 
+data JFunPrototype ni = JFunPrototype {
+   jFunName :: JNode String ni,
+   jFunCallingConv :: Maybe (JNode JCallingConvId ni),
+   jFunArguments :: [JNode (JFunArgDecl ni) ni],
+   jFunReturnType :: JNode (JDataTypeId ni) ni
+   }
+
 data JFunDecl ni = JFunDecl {
-   jFunDeclName :: JNode String ni,
-   jFunDeclCallingConv :: Maybe (JNode JCallingConvId ni),
-   jFunDeclArguments :: [JNode (JFunArgDecl ni) ni],
-   jFunDeclReturnType :: JNode (JDataTypeId ni) ni,
+   jFunDeclTypeConstraints :: [JNode (JTypeConstraint ni) ni],
+   jFunDeclPrototype :: JNode (JFunPrototype ni) ni,
    jFunDeclBody :: Maybe (JNode (JInstrScope ni) ni)
    }
 
@@ -122,6 +156,7 @@ data JFunArgDecl ni = JArgDeclDesc {
    }
 
 data JContextScope ni = JContextScope {
+   jContextScopeTypeConstraints :: [JNode (JTypeConstraint ni) ni],
    jContextScopeDataType :: JNode (JDataTypeId ni) ni,
    jContextScopeLabelStatements :: [JNode (JContextScopeLabelDecl ni) ni]
    }
