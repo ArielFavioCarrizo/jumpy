@@ -42,6 +42,7 @@ data JModuleSt ni =
    JModuleTypeInstanceSt (JTypeInstanceDecl ni)
    
 data JModuleMemberStDesc ni =
+   JModuleNestedModuleDecl (JModuleDecl ni) |
    JModuleTypeClassDecl (JTypeClassDecl ni) |
    JModuleUserTypeDecl (JUserTypeDecl ni) |
    JModuleFunDecl JLinkageType (JFunDecl ni) |
@@ -49,7 +50,7 @@ data JModuleMemberStDesc ni =
    JModuleVarDecl JLinkageType (JVarDecl ni)
    
 data JTypeConstraint ni = JTypeConstraint {
-   jTypeConstraintClassName :: JNode String ni, -- It could be a type class or a variant
+   jTypeConstraintClassName :: JNode String ni,
    jTypeConstraintParams :: [JNode String ni]
    }
    
@@ -60,7 +61,7 @@ data JTypeClassDecl ni = JTypeClassDecl {
    }
    
 data JTypeInstanceDecl ni = JTypeInstanceDecl {
-   jTypeInstanceTypeConstraints :: [JNode (JTypeConstraint ni) ni],
+   jTypeInstanceTypingContext :: [JNode (JTypingContext ni) ni],
    jTypeInstanceMembers :: [JNode (JFunDecl ni) ni]
    }
 
@@ -70,13 +71,21 @@ data JVarDecl ni = JVarDeclDesc {
    jVarDeclDescValue :: JNode (JOperandSt ni) ni
    }
 
-data JTypeDeclParam ni =
-   JTypeDeclGenericParam (JNode String ni) |
-   JTypeDeclTemplateParam (JNode String ni)
+data JGenericParamDecl ni = JGenericParamDecl {
+   jTypeDeclParamType :: JNode JTypeDeclParamType ni,
+   jTypeDeclParamName :: JNode String ni
+   }
+   
+data JTypingContext ni = JTypingContext {
+   jTypingContextConstraints :: [JNode (JTypeConstraint ni) ni],
+   jTypingContextParams :: [JNode (JGenericParamDecl ni) ni]
+   }
+
+data JTypeDeclParamType = Unspecified | Generic | Template
 
 data JUserTypeDecl ni = JTypeDecl {
    jUserTypeDeclName :: JNode String ni,
-   jUserTypeDeclParams :: [JNode (JTypeDeclParam ni) ni],
+   jUserTypeTypingContext :: JNode (JTypingContext ni) ni,
    jUserTypeDeclDesc :: Maybe (JNode (JUserTypeDeclDesc ni) ni)
    }
 
@@ -117,9 +126,9 @@ data JDataTypeId ni =
    JArrayTypeId (JArrayTypeIdDesc ni) |
    JUserTypeId (String) |
    JPtrId (JDataCellTypeId ni) |
-   JParametrizedDataTypeId (JParametrizedDataTypeIdDesc ni)
+   JSpecializedDataTypeId (JSpecializedDataTypeIdDesc ni)
 
-data JParametrizedDataTypeIdDesc ni = JParametrizedDataTypeIdDesc {
+data JSpecializedDataTypeIdDesc ni = JSpecializedDataTypeIdDesc {
    jGenericDataTypeIdDescGenericParams :: [JNode (JDataTypeId ni) ni],
    jGenericDataTypeIdDescWrappedType :: JNode (JDataTypeId ni) ni
 }
@@ -139,13 +148,13 @@ data JCallingConvId = JCDeclCallingConvId
 
 data JFunPrototype ni = JFunPrototype {
    jFunName :: JNode String ni,
+   jFunTypingContext :: JNode (JTypingContext ni) ni,
    jFunCallingConv :: Maybe (JNode JCallingConvId ni),
    jFunArguments :: [JNode (JFunArgDecl ni) ni],
    jFunReturnType :: JNode (JDataTypeId ni) ni
    }
 
 data JFunDecl ni = JFunDecl {
-   jFunDeclTypeConstraints :: [JNode (JTypeConstraint ni) ni],
    jFunDeclPrototype :: JNode (JFunPrototype ni) ni,
    jFunDeclBody :: Maybe (JNode (JInstrScope ni) ni)
    }
@@ -156,14 +165,15 @@ data JFunArgDecl ni = JArgDeclDesc {
    }
 
 data JContextScope ni = JContextScope {
-   jContextScopeTypeConstraints :: [JNode (JTypeConstraint ni) ni],
+   jContextTypingContext :: JNode (JTypingContext ni) ni,
    jContextScopeDataType :: JNode (JDataTypeId ni) ni,
-   jContextScopeLabelStatements :: [JNode (JContextScopeLabelDecl ni) ni]
+   jContextScopeLabelStatements :: [JNode (JContLabelDecl ni) ni]
    }
 
-data JContextScopeLabelDecl ni = JContScopeContDecl {
-   jContScopeLabelDeclName :: JNode String ni,
-   jContScopeLabelDeclInstrScope :: JNode (JInstrScope ni) ni
+data JContLabelDecl ni = JContScopeContDecl {
+   jContLabelDeclName :: JNode String ni,
+   jContLabelDeclContextRefName :: Maybe (String),
+   jContLabelDeclInstrScope :: JNode (JInstrScope ni) ni
    }
 
 data JInstrScope ni = JInstrScope [JNode (JInstrScopeSt ni) ni]
@@ -176,6 +186,7 @@ data JInstrScopeSt ni =
    JInstrScopeLabelDeclSt (JNode String ni) |
    JAssignationSt (JAssignationStDesc ni) |
    JIfSt (JIfStDesc ni) |
+   JSwitchSt [JSwitchCase ni] |
    JWhileSt (JWhileStDesc ni) |
    JDoWhileSt (JWhileStDesc ni) |
    JForSt (JForStDesc ni) |
@@ -199,6 +210,21 @@ data JIfStDesc ni = JIfStDesc {
 data JIfAnotherCaseSt ni =
    JElseIfSt ( JNode (JIfStDesc ni) ni ) |
    JElseSt ( JNode (JInstrScope ni) ni )
+   
+data JSwitchCase ni = JSwitchCase {
+   jSwitchCaseDesc :: JSwitchCaseDesc ni,
+   jSwitchCaseBody :: JNode (JInstrScope ni) ni
+   }
+   
+data JSwitchCaseDesc ni =
+   JSpecificValueCaseDesc ( JNode (JOperandSt ni) ni ) |
+   JVariantMemberCaseDesc ( JNode (JVariantMemberRef ni) ni ) |
+   JDefaultSwitchCaseDesc
+   
+data JVariantMemberRef ni = JVariantMemberRef {
+   jVariantMemberRefName :: JNode String ni,
+   jVariantMemberRefParameters :: [JNode String ni]
+   }
 
 data JWhileStDesc ni = JWhileStDesc {
    jWhileStDescConditionValue :: JNode (JOperandSt ni) ni,
