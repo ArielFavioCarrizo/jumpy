@@ -38,7 +38,7 @@ data JModuleDecl ni = JModuleDecl {
    }
    
 data JModuleSt ni =
-   JModuleMemberSt JMemberAccess (JModuleMemberStDesc ni) |
+   JModuleMemberSt (Maybe JMemberAccess) (JModuleMemberStDesc ni) |
    JModuleTypeInstanceSt (JTypeInstanceDecl ni)
    
 data JModuleMemberStDesc ni =
@@ -121,12 +121,18 @@ data JDataTypeId ni =
    JU64Id |
    JF32Id |
    JF64Id |
+   JContTypeId (Maybe JContConvId) |
+   JContLabelTypeId (Maybe JContConvId) |
+   JNamedTypeId (String) |
    JFunTypeId (JFunTypeIdDesc ni) |
-   JContTypeId JCallingConvId |
    JArrayTypeId (JArrayTypeIdDesc ni) |
-   JUserTypeId (String) |
    JPtrId (JDataCellTypeId ni) |
    JSpecializedDataTypeId (JSpecializedDataTypeIdDesc ni)
+   
+data JContLabelTypeIdDesc ni = JContLabelTypeIdDesc {
+   jContLabelTypeIdDescConvention :: Maybe (JNode JContConvId ni),
+   jContLabelTypeIdDescContextType :: JNode (JDataTypeId ni) ni
+   }
 
 data JSpecializedDataTypeIdDesc ni = JSpecializedDataTypeIdDesc {
    jGenericDataTypeIdDescGenericParams :: [JNode (JDataTypeId ni) ni],
@@ -139,12 +145,14 @@ data JArrayTypeIdDesc ni = JArrayIdDesc {
    }
 
 data JFunTypeIdDesc ni = JFunTypeIdDesc {
-   jFunTypeIdCallingConv :: JNode JCallingConvId ni,
+   jFunTypeIdCallingConv :: Maybe (JNode JCallingConvId ni),
    jFunTypeIdArguments :: [JNode (JDataTypeId ni) ni],
    jFunTypeIdReturnType :: JNode (JDataTypeId ni) ni
    }
 
-data JCallingConvId = JCDeclCallingConvId
+data JCallingConvId = JCDeclCallingConvId | JStdCallCallingConvId
+
+data JContConvId = JCDeclContConvId | JFastCallContConvId | JTrampolinedCDeclContConvId
 
 data JFunPrototype ni = JFunPrototype {
    jFunName :: JNode String ni,
@@ -173,7 +181,7 @@ data JContextScope ni = JContextScope {
 data JContLabelDecl ni = JContScopeContDecl {
    jContLabelDeclName :: JNode String ni,
    jContLabelDeclContextRefName :: Maybe (String),
-   jContLabelDeclInstrScope :: JNode (JInstrScope ni) ni
+   jContLabelDeclInstrScope :: Maybe (JNode (JInstrScope ni) ni)
    }
 
 data JInstrScope ni = JInstrScope [JNode (JInstrScopeSt ni) ni]
@@ -193,8 +201,9 @@ data JInstrScopeSt ni =
    JBreakSt |
    JContinueSt |
    JReturnSt |
-   JInstrScopeCallSt (JCallStDesc ni) |
-   JGoToSt (JOperandSt ni)
+   JInstrScopeCallSt (JParametrizedStDesc ni) |
+   JGoToSt (JOperandSt ni) |
+   JCPSSt (JOperandSt ni) -- 'cps' statement
 
 data JAssignationStDesc ni = JAssignationStDesc {
    jAssignationStDstOp :: JNode (JOperandSt ni) ni,
@@ -237,23 +246,24 @@ data JForStDesc ni = JForStDesc {
    jForStDescPreNextIterationScope :: JNode (JInstrScopeSt ni) ni
    }
 
-data JCallStDesc ni = JCallStDesc {
-   jCallStFunction :: JNode ( JOperandSt ni ) ni,
-   jCallStArguments :: [ JNode ( JCallArg ni ) ni ]
+data JParametrizedStDesc ni = JParametrizedStDesc {
+   jParametrizedStOperand :: JNode ( JOperandSt ni ) ni,
+   jParametrizedStArguments :: [ JNode ( JArg ni ) ni ]
    }
    
-data JCallArg ni = JCallArg {
-   jCallArgName :: Maybe (JNode String ni),
-   jCallArgValue :: JNode (JOperandSt ni) ni
+data JArg ni = JCallArg {
+   jArgName :: Maybe (JNode String ni),
+   jArgValue :: JNode (JOperandSt ni) ni
 }
 
 data JOperandSt ni =
    JOperandLiteralSt (JLiteralSt ni) |
    JOperandIdentifierSt String |
    JOperandContValSt (JContVal ni) |
-   JOperandDereferencePtrSt (JNode (JOperandSt ni) ni) |
+   JOperandDereferencePtrOpSt (JNode (JOperandSt ni) ni) |
    JOperandFieldSt (JFieldId ni) |
-   JOperandCallSt ( JCallStDesc ni ) |
+   JOperandParametrizedSt ( JParametrizedStDesc ni ) |
+   JOperandCastOpSt (JNode (JDataTypeId ni) ni) (JOperandSt ni) |
    JOperandAddOpSt (JNode (JOperandSt ni) ni, JNode (JOperandSt ni) ni) |
    JOperandSubOpSt (JNode (JOperandSt ni) ni, JNode (JOperandSt ni) ni) |
    JOperandMulOpSt (JNode (JOperandSt ni) ni, JNode (JOperandSt ni) ni) |

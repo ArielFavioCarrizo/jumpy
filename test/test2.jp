@@ -1,0 +1,43 @@
+// This is a comment
+
+module tmA {
+   public i64 add(i64 a, i64 b);
+   public i64 sub(i64 a, i64 b);
+   
+   private i64 addPriv(i64 a, i64 b);
+   private i64 subPriv(i64 a, i64 b);
+   
+   public void publicFunc();
+   private void internalFunc();
+}
+
+/**
+ * This is another comment
+ */
+
+module tmB {
+   public struct AddContext {
+      i64 numberA;
+      i64 numberB;
+      
+      cont continuation;
+   }
+   
+   context AddContext {
+      public doAdd1;
+      public doAdd2(context);
+      
+      private doAdd3;
+      private doAdd4(context);
+   }
+   
+   /**
+    * This declaration is commented
+   
+   void commentedFunc1();
+   
+    */
+    
+   // This declaration is commented
+   // void commentedFunc2();
+}

@@ -1,0 +1,92 @@
+// This is a comment
+ 
+module test {
+
+   public struct contextA {
+      i64 a;
+      i64 b;
+      i64 c;
+      
+      cont continuation;
+   }
+   
+   struct Person;
+   
+   struct contextB;
+   struct contextC;
+   
+   public struct Vec2 {
+      f64 a;
+      f64 b;
+   }
+
+   /**
+    * This
+    * is
+    * another
+    * comment
+    */
+
+   public struct exampleA {
+      i64 green;
+      u64 tree;
+      i32 leaf;
+      u32 house;
+      i16 node;
+      u16 fire;
+      i8 light;
+      u8 wind;
+      bool existence;
+      f64 dark;
+      f32 metal;
+      person master;
+      i64 *treehouse;
+      u64 *location;
+      i32 *conflagration;
+      u32 *water;
+      void **awesome;
+      
+      void (*funA) (i64 *a, void **b);
+      Vec2 (*funB) (i32 a);
+      void (*funC) (Person *person);
+      
+      void (__cdecl *funD) (i64 *a, void **b);
+      Vec2 (__cdecl *funE) (i32 a);
+      void (__cdecl *funF) (Person *person);
+      
+      void (__stdcall *funG) (i64 *a, void **b);
+      Vec2 (__stdcall *funH) (i32 a);
+      void (__stdcall *funI) (Person *person);
+      
+      cont contA;
+      cont __cdecl contB;
+      cont __trampolinedcdecl contC;
+      cont __fastcall contD;
+      
+      label<contextA> *labelA;
+      label<contextB> __cdecl *labelB;
+      label<contextC> __trampolinedcdecl *labelC;
+      label<contextD> __fastcall *labelD;
+   }
+
+   context exampleContext {
+      public stateA;
+      public stateB(context);
+      private stateC;
+      private stateD(env);
+      
+      public __cdecl stateE;
+      public __trampolinedcdecl stateF;
+      public __fastcall stateG;
+   }
+   
+   public void processPerson(Person *person);
+   
+   public Vec2 add(Vec2 a, Vec2 b);
+   
+   // void commentedFun();
+   
+   private void internalFunA(Person *person);
+   private void internalFunB(Vec2 a, Vec2 b);
+   private Vec2 internalFunC(Person *person);
+}
