@@ -19,18 +19,12 @@ import Data.Int
 
 class (Show ni) => JLocInfo ni
 
-data Module = Module
-
-data ModuleMember = 
-   TypeClassModuleMember |
-   TypeModuleMember |
-   FunModuleMember |
-   StateModuleMember |
-   VarModuleMember
-
-data Symbol where
-   ModuleSymbol :: Module -> Symbol
-   ModuleMemberSymbol :: ModuleMember -> Symbol
+data Entity = 
+   TypeClassEntity |
+   TypeEntity |
+   FunEntity |
+   StateEntity |
+   VarEntity
 
 data Asg e li o where
-   FindSymbol :: String -> (ModuleMember -> Asg e li o) -> Asg e li o
+   FindEntityByName :: String -> (Entity -> Asg e li o) -> Asg e li o
