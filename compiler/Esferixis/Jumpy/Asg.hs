@@ -28,13 +28,13 @@ data FunId e = FunId Int
 data StateId e = StateId Int
 data VarId e = VarId Int
 
-data Entity e = 
-   ModuleEntity (ModuleId e) |
-   TypeClassEntity (TypeClassId e) |
-   TypeEntity (TypeId e) |
-   FunEntity (FunId e) |
-   StateEntity (StateId e) |
-   VarEntity (VarId e)
+data Entity x = 
+   ModuleEntity (ModuleId x) |
+   TypeClassEntity (TypeClassId x) |
+   TypeEntity (TypeId x) |
+   FunEntity (FunId x) |
+   StateEntity (StateId x) |
+   VarEntity (VarId x)
 
 data LinkageType =
    PrivateLinkage |
@@ -47,35 +47,37 @@ data MemberAccess =
 
 data EntityName = GlobalEntityName String | LocalEntityName String
 
-data ModuleMemberDecl e ni o where
-   ModuleFunDecl :: Maybe (TaggedNode ni LinkageType) -> FunDecl e ni o -> ModuleMemberDecl e ni o
-   ModuleStateDecl :: Maybe (TaggedNode ni LinkageType) -> StateDecl e ni o -> ModuleMemberDecl e ni o
+data ModuleMemberDecl x ni e o where
+   ModuleFunDecl :: Maybe (TaggedNode ni LinkageType) -> FunDecl x ni e o -> ModuleMemberDecl x ni e o
+   ModuleStateDecl :: Maybe (TaggedNode ni LinkageType) -> StateDecl x ni e o -> ModuleMemberDecl x ni e o
 
-data ModuleCmd e ni o where
-   ModuleCmdMemberDecl :: (TaggedNode ni MemberAccess) -> ModuleMemberDecl e ni o -> ModuleCmd e ni o
+data ModuleCmd x ni e o where
+   ModuleCmdMemberDecl :: (TaggedNode ni MemberAccess) -> ModuleMemberDecl x ni e o -> ModuleCmd x ni e o
 
-data InstrScopeCmd e ni o where
-   InstrScopeFunDecl :: FunDecl e ni o -> InstrScopeCmd e ni o
-   InstrScopeStateDecl :: StateDecl e ni o -> InstrScopeCmd e ni o
+data InstrScopeCmd x ni e o where
+   InstrScopeFunDecl :: FunDecl x ni e o -> InstrScopeCmd x ni e o
+   InstrScopeStateDecl :: StateDecl x ni e o -> InstrScopeCmd x ni e o
 
-data MaybeInstrScope e ni o where
-   JustInstrScope :: Asg e ni (InstrScopeCmd e ni) (ni, o) -> MaybeInstrScope e ni o
-   NothingInstrScope :: MaybeInstrScope e ni ()
+data MaybeInstrScope x ni e o where
+   JustInstrScope :: Asg x ni (InstrScopeCmd x ni) e (ni, o) -> MaybeInstrScope x ni e o
+   NothingInstrScope :: MaybeInstrScope x ni e ()
 
 data TypedArgumentDecl e = TypedArgumentDecl String (TypeId e)
 
-data ModuleDecl e ni o = ModuleDecl (TaggedNode ni String) ( Asg e ni (ModuleCmd e ni) o)
+data ModuleDecl x ni e o = ModuleDecl (TaggedNode ni String) ( Asg x ni (ModuleCmd x ni) e o)
 
 data CallingConv = CDeclCallingConv | StdCallCallingConv
 data StateConv = CDeclStateConv
 
-data FunDecl e ni o = FunDecl (TaggedNode ni String) (Maybe (TaggedNode ni CallingConv)) [TaggedNode ni (TypedArgumentDecl e)] (MaybeInstrScope e ni o)
+data FunDecl x ni e o = FunDecl (TaggedNode ni String) (Maybe (TaggedNode ni CallingConv)) [TaggedNode ni (TypedArgumentDecl x)] (MaybeInstrScope x ni e o)
 
-data StateContextDecl e ni = StateContextDecl (Maybe (TaggedNode ni String)) (TaggedNode ni (TypeId e))
-data StateDecl e ni o = StateDecl (TaggedNode ni String) (Maybe (TaggedNode ni StateConv)) (TaggedNode ni (StateContextDecl ni e)) (MaybeInstrScope e ni o)
-data VarDecl e ni o = VarDecl (TaggedNode ni String) (TaggedNode ni (TypeId e))
+data StateContextDecl x ni = StateContextDecl (Maybe (TaggedNode ni String)) (TaggedNode ni (TypeId x))
+data StateDecl x ni e o = StateDecl (TaggedNode ni String) (Maybe (TaggedNode ni StateConv)) (TaggedNode ni (StateContextDecl x ni)) (MaybeInstrScope x ni e o)
+data VarDecl x ni e o = VarDecl (TaggedNode ni String) (TaggedNode ni (TypeId x))
 
-data Asg e ni cmd o where
-   RootModule :: (ModuleId e -> Asg e ni cmd o) -> Asg e ni cmd o
-   FindEntityByName :: EntityName -> (Maybe (TaggedNode ni (Entity e)) -> Asg e ni cmd o) -> Asg e ni cmd o
-   ExecuteCommand :: cmd o -> Asg e ni cmd o
+data Asg x ni cmd e o where
+   RootModule :: (ModuleId x -> Asg x ni cmd e o) -> Asg x ni cmd e o
+   FindEntityByName :: EntityName -> (Maybe (TaggedNode ni (Entity x)) -> Asg x ni cmd e o) -> Asg x ni cmd e o
+   Throw :: e -> Asg x ni cmd e o
+   Try :: Asg x ni cmd e o -> Asg x ni cmd e2 (Either e o)
+   ExecuteCommand :: cmd e o -> Asg x ni cmd e o
