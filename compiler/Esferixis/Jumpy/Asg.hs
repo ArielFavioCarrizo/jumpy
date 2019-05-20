@@ -25,23 +25,25 @@ data TaggedNode ni a = TaggedNode ni a
 
 data ModuleId x = ModuleId Int
 data TypeClassId x = TypeClassId Int
-data TypeId x = TypeId Int
+data StructId x = StructId x
+data UnionId x = UnionId x
+data StructMemberId x = StructMemberId x
+data UnionMemberId x = UnionMemberId x
 data FunId x = FunId Int
 data StateId x = StateId Int
 data VarId x = VarId Int
-data StructMemberId x = StructMemberId x
-data UnionMemberId x = UnionMemberId x
 data LabelId x = LabelId Int
 
 data Entity x = 
    ModuleEntity (ModuleId x) |
    TypeClassEntity (TypeClassId x) |
-   TypeEntity (TypeId x) |
+   StructEntity (StructId x) |
+   UnionEntity (UnionId x) |
+   StructMemberEntity (StructMemberId x) |
+   UnionMemberEntity (UnionMemberId x) |
    FunEntity (FunId x) |
    StateEntity (StateId x) |
    VarEntity (VarId x) |
-   StructMemberEntity (StructMemberId x) |
-   UnionMemberEntity (UnionMemberId x) |
    LabelEntity (LabelId x)
 
 data LinkageType =
@@ -53,12 +55,11 @@ data MemberAccess =
    PublicMember |
    PrivateMember
    
-data MaybeDecl decl ni e o =
-   JustDecl (decl ni e o) |
-   NothingDecl ni e ()
-   
 data ExprDecl ni e o = ExprDecl ni e o
+data ExprId x = ExprId x
+
 data TypeExprDecl ni e o = TypeExprDecl ni e o
+data TypeExprId x = TypeExprId x
 
 data EntityName = GlobalEntityName String | LocalEntityName String
 
@@ -88,11 +89,11 @@ data LinkedDeclException x =
    
 data EntityNotFoundException = EntityNotFoundException EntityName
 
-data DeclCmd cmd ni e o = DeclCmd ( forall x. Asg x ni (InstrScopeCmd x ni) e (ni, o) ) -- It is rank-2 type because local declarations are only valid in this scope
+data DeclCmd cmd ni e o = DeclCmd ( forall x. Asg x ni ( cmd x ni ) e (ni, o) ) -- It is rank-2 type because local declarations are only valid in this scope
 
 data ModuleMemberDecl x ni e o where
-   ModuleFunDecl :: Maybe (TaggedNode ni LinkageType) -> FunDecl ni e o -> ModuleMemberDecl x ni ( LinkedDeclException ( Either ( FunDeclException x ) e ) ) o
-   ModuleStateDecl :: Maybe (TaggedNode ni LinkageType) -> StateDecl ni e o -> ModuleMemberDecl x ni ( LinkedDeclException ( Either ( StateDeclException x ) e ) ) o
+   ModuleFunDecl :: Maybe (TaggedNode ni LinkageType) -> FunDecl x -> ModuleMemberDecl x ni ( LinkedDeclException ( FunDeclException x ) ) ()
+   ModuleStateDecl :: Maybe (TaggedNode ni LinkageType) -> StateDecl x -> ModuleMemberDecl x ni ( LinkedDeclException ( StateDeclException x ) ) ()
    ModuleStructDecl :: StructDecl ni e o -> ModuleMemberDecl x ni ( Either (StructDeclException x) e ) o
    ModuleUnionDecl :: UnionDecl ni e o -> ModuleMemberDecl x ni ( Either (StructDeclException x) e ) o
 
@@ -103,7 +104,7 @@ data StructMemberDeclException x =
    StructMemberExistsException (StructMemberId x)
 
 data StructCmd x ni e o where
-   StructMemberDecl :: TypeExprDecl ni e o -> ( o -> (ni,String,o2) ) -> StructCmd x ni ( Either (StructMemberDeclException x) e ) o2
+   StructMemberDecl :: ni -> TypeExprId x -> String -> StructCmd x ni (StructMemberDeclException x) ()
    
 type StructDecl ni e o = DeclCmd StructCmd ni e o
    
@@ -111,48 +112,49 @@ data UnionMemberDeclException x =
    UnionMemberExistsException (UnionMemberId x)
    
 data UnionCmd x ni e o where
-   UnionMemberDecl :: TypeExprDecl ni e o -> ( o -> (TaggedNode ni String,o2) ) -> UnionCmd x ni ( Either (UnionMemberDeclException x) e ) o2
+   UnionMemberDecl :: ni -> TypeExprId x -> UnionCmd x ni (UnionMemberDeclException x) ()
    
 type UnionDecl ni e o = DeclCmd UnionCmd ni e o
 
 data LabelDeclException x =
    LabelExistsException (LabelId x)
    
-data IfStDecl ni e o where
-   IfStDecl :: (ExprDecl ni e o) -> ( o -> InstrScopeDecl ni e2 o2 ) -> IfStDecl ni e2 o2
-   ElseDecl :: InstrScopeDecl ni e o -> IfStDecl ni e o
-   EndIfDecl :: IfStDecl ni e o   
-   
+data InstrScopeId x = InstrScopeId x
 type InstrScopeDecl ni e o = DeclCmd InstrScopeCmd ni e o
 
 data InstrScopeCmd x ni e o where
-   InstrScopeFunDecl :: FunDecl ni e o -> InstrScopeCmd x ni ( Either (FunDeclException x) e ) o
-   InstrScopeStateDecl :: StateDecl ni e o -> InstrScopeCmd x ni ( Either (FunDeclException x) e ) o
-   InstrScopeVarDecl :: VarDecl ni e o -> InstrScopeCmd x ni ( Either (VarDeclException x) e ) o
+   InstrScopeExprDecl :: ExprDecl ni e o -> InstrScopeCmd x ni e (ExprId x, o)
+   InstrScopeInstrScopeDecl :: InstrScopeDecl ni e o -> InstrScopeCmd x ni e (InstrScopeId x)
+   InstrScopeFunDecl :: FunDecl x -> InstrScopeCmd x ni (FunDeclException x) ()
+   InstrScopeStateDecl :: StateDecl x -> InstrScopeCmd x ni ( Either (FunDeclException x) e ) o
+   InstrScopeVarDecl :: VarDecl x -> InstrScopeCmd x ni ( Either (VarDeclException x) e ) o
    InstrScopeStructDecl :: StructDecl ni e o -> InstrScopeCmd x ni ( Either (StructDeclException x) e ) o
    InstrScopeUnionDecl :: UnionDecl ni e o -> InstrScopeCmd x ni ( Either (UnionDeclException x) e ) o
    InstrScopeLabelDecl :: TaggedNode ni String -> InstrScopeCmd x ni (LabelDeclException x) ()
-   InstrScopeIfDecl :: IfStDecl ni e o -> InstrScopeCmd x ni e o
-   InstrScopeWhileDecl :: ExprDecl ni e o -> ( o -> InstrScopeDecl ni e2 o2 ) -> InstrScopeCmd x ni e2 o2
-   InstrScopeDoWhileDecl :: InstrScopeDecl ni e o -> ( o -> ExprDecl ni e2 o2 ) -> InstrScopeCmd x ni e2 o2
+   InstrScopeIfDecl :: ni -> [((ExprId x), (InstrScopeId x))] -> Maybe (ExprId x) -> InstrScopeCmd x ni e ()
+   InstrScopeWhileDecl :: ni -> ExprId x -> InstrScopeId x -> InstrScopeCmd x ni e ()
+   InstrScopeDoWhileDecl :: ni -> InstrScopeId x -> ExprId x -> InstrScopeCmd x ni e ()
    InstrScopeBreakDecl :: ni -> InstrScopeCmd x ni e ()
    InstrScopeContinueDecl :: ni -> InstrScopeCmd x ni e ()
-   InstrScopeReturnDecl :: ni -> MaybeDecl ExprDecl ni e o -> InstrScopeCmd x ni e o
-   InstrScopeGoToDecl :: ExprDecl ni e o -> InstrScopeCmd x ni e o
+   InstrScopeReturnDecl :: ni -> Maybe (ExprId x) -> InstrScopeCmd x ni e o
+   InstrScopeGoToDecl :: ExprId x -> InstrScopeCmd x ni e o
 
 data ModuleDecl x ni e o = ModuleDecl (TaggedNode ni String) ( Asg x ni (ModuleCmd x ni) e o)
 
 data CallingConv = CDeclCallingConv | StdCallCallingConv
 data StateConv = CDeclStateConv
 
-data FunDecl ni e o = FunDecl ni e o -- Incomplete
-data StateDecl ni e o = StateDecl ni e o -- Incomplete
+data FunDecl x = FunDecl [FunArg x] ( Maybe (InstrScopeId x) )
+data FunArg x = FunArg (TypeExprId x) String
 
-data VarDecl ni e o where 
-   VarDecl :: TypeExprDecl ni e o -> ( o -> (TaggedNode ni String,o2) ) -> VarDecl ni e o2
+data StateDecl x = StateDecl (StateContextDecl x) ( Maybe (InstrScopeId x) )
+data StateContextDecl x = AnonymusStateContextDecl (TypeExprId x) | NamedStateContextDecl (TypeExprId x) String
+
+data VarDecl x = VarDecl (TypeExprId x) String
 
 data Asg x ni cmd e o where
    AsgFindEntityByName :: EntityName -> Asg x ni cmd EntityNotFoundException (Entity x)
+   AsgTypeExprDecl :: TypeExprDecl ni e o -> Asg x ni cmd e (TypeExprId x, o)
    AsgThrow :: e -> Asg x ni cmd e o
    AsgTry :: Asg x ni cmd e o -> Asg x ni cmd e2 (Either e o)
    AsgExecuteCommand :: cmd e o -> Asg x ni cmd e o
