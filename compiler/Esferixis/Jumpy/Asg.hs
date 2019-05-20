@@ -23,12 +23,13 @@ class (Show ni) => JLocInfo ni
 
 data TaggedNode ni a = TaggedNode ni a
 
-data ModuleId e = ModuleId Int
-data TypeClassId e = TypeClassId Int
-data TypeId e = TypeId Int
-data FunId e = FunId Int
-data StateId e = StateId Int
-data VarId e = VarId Int
+data ModuleId x = ModuleId Int
+data TypeClassId x = TypeClassId Int
+data TypeId x = TypeId Int
+data FunId x = FunId Int
+data StateId x = StateId Int
+data VarId x = VarId Int
+data LabelId x = LabelId Int
 
 data Entity x = 
    ModuleEntity (ModuleId x) |
@@ -36,7 +37,8 @@ data Entity x =
    TypeEntity (TypeId x) |
    FunEntity (FunId x) |
    StateEntity (StateId x) |
-   VarEntity (VarId x)
+   VarEntity (VarId x) |
+   LabelEntity (LabelId x)
 
 data LinkageType =
    PrivateLinkage |
@@ -46,6 +48,8 @@ data LinkageType =
 data MemberAccess =
    PublicMember |
    PrivateMember
+   
+data Expression x = Expression x
 
 data EntityName = GlobalEntityName String | LocalEntityName String
 
@@ -60,9 +64,9 @@ data StateDeclException x =
 data LinkageException x =
    LinkageHasBeenDeclared (FunId x)
    
-data LinkedDeclException e =
-   JustLinkageException (LinkageException e ) |
-   OtherException e
+data LinkedDeclException x =
+   JustLinkageException (LinkageException x) |
+   OtherException x
    
 data EntityNotFoundException = EntityNotFoundException EntityName
 
@@ -73,9 +77,25 @@ data ModuleMemberDecl x ni e o where
 data ModuleCmd x ni e o where
    ModuleCmdMemberDecl :: (TaggedNode ni MemberAccess) -> ModuleMemberDecl x ni e o -> ModuleCmd x ni e o
 
+data LabelDeclException x =
+   LabelExistsException (LabelId x)
+   
+data IfScopeCmd x ni e o where
+   IfScopeIfDecl :: Expression x -> InstrScopeDecl ni e o -> IfScopeCmd x ni e o
+   IfScopeElseDecl :: InstrScopeDecl ni e o -> IfScopeCmd x ni e o
+
 data InstrScopeCmd x ni e o where
    InstrScopeFunDecl :: FunDecl x ni e o -> InstrScopeCmd x ni ( Either (FunDeclException x) e ) o
    InstrScopeStateDecl :: StateDecl x ni e o -> InstrScopeCmd x ni ( Either (FunDeclException x) e ) o
+   InstrScopeLabelDecl :: String -> InstrScopeCmd x ni (LabelDeclException x) ()
+   InstrScopeIfDecl :: Asg x ni (IfScopeCmd x ni) e o -> InstrScopeCmd x ni e o
+   InstrScopeWhileDecl :: Expression x -> InstrScopeDecl ni e o -> InstrScopeCmd x ni e o
+   InstrScopeDoWhileDecl :: InstrScopeDecl ni e o -> Expression x -> InstrScopeCmd x ni e o
+   InstrScopeBreakDecl :: InstrScopeCmd x ni e ()
+   InstrScopeContinueDecl :: InstrScopeCmd x ni e ()
+   InstrScopeReturnDecl :: Maybe (Expression x) -> InstrScopeCmd x ni e ()
+   InstrScopeGoToDecl :: Expression x -> InstrScopeCmd x ni e ()
+   InstrScopeAssignmentDecl :: Expression x -> Expression x -> InstrScopeCmd x ni e ()
    
 data InstrScopeDecl ni e o = InstrScopeDecl ( forall x. Asg x ni (InstrScopeCmd x ni) e (ni, o) ) -- It is rank-2 type because local declarations are only valid in this scope
 
