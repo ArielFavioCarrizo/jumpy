@@ -89,7 +89,11 @@ data LinkedDeclException x =
    
 data EntityNotFoundException = EntityNotFoundException EntityName
 
-data NestedDecl cmd ni e o = NestedDecl ( forall x. Asg x ni ( cmd x ni ) e (ni, o) ) -- It is rank-2 type because local declarations are only valid in this scope
+data MDecl cmd ni e o = NestedDecl ( forall x. Asg x ni ( cmd x ni ) e (ni, o) ) -- It is rank-2 type because local declarations are only valid in this scope
+
+data MaybeDecl decl ni e o where
+   JustDecl :: decl ni e o -> MaybeDecl decl ni e o
+   NothingDecl :: MaybeDecl decl ni e ()
 
 data ModuleMemberDecl x ni e o where
    ModuleFunDecl :: Maybe (TaggedNode ni LinkageType) -> FunDecl x ni e o -> ModuleMemberDecl x ni ( LinkedDeclException ( FunDeclException x ) ) ()
@@ -109,7 +113,7 @@ data LabelDeclException x =
    LabelExistsException (LabelId x)
    
 data InstrScopeId x = InstrScopeId x
-type InstrScopeDecl ni e o = NestedDecl InstrScopeCmd ni e o
+data InstrScopeDecl ni e o = InstrScopeDecl (MDecl InstrScopeCmd ni e o)
 
 data InstrScopeCmd x ni e o where
    InstrScopeExprDecl :: ExprDecl ni e o -> InstrScopeCmd x ni e (ExprId x, o)
@@ -133,10 +137,11 @@ data ModuleDecl x ni e o = ModuleDecl (TaggedNode ni String) ( Asg x ni (ModuleC
 data CallingConv = CDeclCallingConv | StdCallCallingConv
 data StateConv = CDeclStateConv
 
-data FunDecl x ni e o = FunDecl ni [FunArg x ni] ( Maybe (InstrScopeDecl ni e o) )
+data FunDecl x ni e o = FunDecl ni [FunArg x ni] ( MaybeDecl InstrScopeDecl ni e o )
+
 data FunArg x ni = FunArg ni (TypeExprId x) String
 
-data StateDecl x ni e o = StateDecl (StateContextDecl x ni) ( Maybe (InstrScopeDecl ni e o) )
+data StateDecl x ni e o = StateDecl (StateContextDecl x ni) ( MaybeDecl InstrScopeDecl ni e o )
 data StateContextDecl ni x = AnonymusStateContextDecl (TypeExprId x) | NamedStateContextDecl (TypeExprId x) (TaggedNode ni String)
 
 data VarDecl x ni = VarDecl ni (TypeExprId x) String
