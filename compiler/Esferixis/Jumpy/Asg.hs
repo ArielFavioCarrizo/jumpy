@@ -34,7 +34,7 @@ data StateId x = StateId Int
 data VarId x = VarId Int
 data LabelId x = LabelId Int
 
-data Entity x = 
+data EntityId x = 
    ModuleEntity (ModuleId x) |
    TypeClassEntity (TypeClassId x) |
    StructEntity (StructId x) |
@@ -64,21 +64,21 @@ data TypeExprId x = TypeExprId x
 data EntityName = GlobalEntityName String | LocalEntityName String
 
 data FunDeclException x =
-   EntityExistsFunDeclException (Entity x) |
+   EntityExistsFunDeclException (EntityId x) |
    FunSignatureMismatch (FunId x)
    
 data StateDeclException x =
-   EntityExistsStateDeclException (Entity x) |
+   EntityExistsStateDeclException (EntityId x) |
    StateTypeMismatch (StateId x)
    
 data VarDeclException x =
-   EntityExistsVarDeclException (Entity x)
+   EntityExistsVarDeclException (EntityId x)
    
 data StructDeclException x =
-   EntityExistsStructDeclException (Entity x)
+   EntityExistsStructDeclException (EntityId x)
   
 data UnionDeclException x =
-   EntityExistsUnionDeclException (Entity x)
+   EntityExistsUnionDeclException (EntityId x)
    
 data LinkageException x =
    LinkageHasBeenDeclared (FunId x)
@@ -100,10 +100,10 @@ data ModuleMemberDecl x ni e o where
 data ModuleCmd x ni e o where
    ModuleCmdMemberDecl :: (TaggedNode ni MemberAccess) -> ModuleMemberDecl x ni e o -> ModuleCmd x ni e o
    
-data StructDecl x ni = StructDecl [FieldDecl x ni]
-data UnionDecl x ni = UnionDecl [FieldDecl x ni]
+data StructDecl x ni = StructDecl ni [FieldDecl x ni]
+data UnionDecl x ni = UnionDecl ni [FieldDecl x ni]
 
-data FieldDecl x ni = FieldDecl ni (TypeExprId x) String
+data FieldDecl x ni = FieldDecl ni (TypeExprId x) (TaggedNode ni String)
 
 data LabelDeclException x =
    LabelExistsException (LabelId x)
@@ -141,8 +141,14 @@ data StateContextDecl ni x = AnonymusStateContextDecl (TypeExprId x) | NamedStat
 
 data VarDecl x ni = VarDecl ni (TypeExprId x) String
 
+data MemberContainer x m where
+   ModuleContainer :: ModuleId x -> MemberContainer x ( EntityId x )
+   StructContainer :: StructId x -> MemberContainer x ( StructMemberId x )
+   UnionContainer :: UnionId x -> MemberContainer x ( UnionMemberId x)
+
 data Asg x ni cmd e o where
-   AsgFindEntityByName :: EntityName -> Asg x ni cmd EntityNotFoundException (Entity x)
+   AsgFindEntityByName :: EntityName -> Asg x ni cmd EntityNotFoundException (EntityId x)
+   AsgFindMember :: String -> MemberContainer x o -> Asg x ni cmd e o
    AsgTypeExprDecl :: TypeExprDecl ni e o -> Asg x ni cmd e (TypeExprId x, o)
    AsgThrow :: e -> Asg x ni cmd e o
    AsgTry :: Asg x ni cmd e o -> Asg x ni cmd e2 (Either e o)
