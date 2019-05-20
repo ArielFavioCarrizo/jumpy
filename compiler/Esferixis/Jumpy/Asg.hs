@@ -126,8 +126,8 @@ data InstrScopeCmd x ni e o where
    InstrScopeExprDecl :: ExprDecl ni e o -> InstrScopeCmd x ni e (ExprId x, o)
    InstrScopeInstrScopeDecl :: InstrScopeDecl ni e o -> InstrScopeCmd x ni e (InstrScopeId x)
    InstrScopeFunDecl :: FunDecl x -> InstrScopeCmd x ni (FunDeclException x) ()
-   InstrScopeStateDecl :: StateDecl x -> InstrScopeCmd x ni ( Either (FunDeclException x) e ) o
-   InstrScopeVarDecl :: VarDecl x -> InstrScopeCmd x ni ( Either (VarDeclException x) e ) o
+   InstrScopeStateDecl :: StateDecl x -> InstrScopeCmd x ni (StateDeclException x) ()
+   InstrScopeVarDecl :: VarDecl x -> InstrScopeCmd x ni (VarDeclException x) ()
    InstrScopeStructDecl :: StructDecl ni e o -> InstrScopeCmd x ni ( Either (StructDeclException x) e ) o
    InstrScopeUnionDecl :: UnionDecl ni e o -> InstrScopeCmd x ni ( Either (UnionDeclException x) e ) o
    InstrScopeLabelDecl :: TaggedNode ni String -> InstrScopeCmd x ni (LabelDeclException x) ()
@@ -136,8 +136,8 @@ data InstrScopeCmd x ni e o where
    InstrScopeDoWhileDecl :: ni -> InstrScopeId x -> ExprId x -> InstrScopeCmd x ni e ()
    InstrScopeBreakDecl :: ni -> InstrScopeCmd x ni e ()
    InstrScopeContinueDecl :: ni -> InstrScopeCmd x ni e ()
-   InstrScopeReturnDecl :: ni -> Maybe (ExprId x) -> InstrScopeCmd x ni e o
-   InstrScopeGoToDecl :: ExprId x -> InstrScopeCmd x ni e o
+   InstrScopeReturnDecl :: ni -> Maybe (ExprId x) -> InstrScopeCmd x ni e ()
+   InstrScopeGoToDecl :: ExprId x -> InstrScopeCmd x ni e ()
 
 data ModuleDecl x ni e o = ModuleDecl (TaggedNode ni String) ( Asg x ni (ModuleCmd x ni) e o)
 
