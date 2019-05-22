@@ -25,10 +25,10 @@ data TaggedNode ni a = TaggedNode ni a
 
 data ModuleId x = ModuleId Int
 data TypeClassId x = TypeClassId Int
-data StructId x = StructId x
-data UnionId x = UnionId x
-data StructMemberId x = StructMemberId x
-data UnionMemberId x = UnionMemberId x
+data StructId x = StructId Int
+data UnionId x = UnionId Int
+data StructMemberId x = StructMemberId Int
+data UnionMemberId x = UnionMemberId Int
 data FunId x = FunId Int
 data StateId x = StateId Int
 data VarId x = VarId Int
@@ -56,10 +56,10 @@ data MemberAccess =
    PrivateMember
    
 data ExprDecl ni e o = ExprDecl ni e o
-data ExprId x = ExprId x
+data ExprId x = ExprId Int
 
 data TypeExprDecl ni e o = TypeExprDecl ni e o
-data TypeExprId x = TypeExprId x
+data TypeExprId x = TypeExprId Int
 
 data EntityName = GlobalEntityName String | LocalEntityName String
 
@@ -112,7 +112,7 @@ data FieldDecl x ni = FieldDecl ni (TypeExprId x) (TaggedNode ni String)
 data LabelDeclException x =
    LabelExistsException (LabelId x)
    
-data InstrScopeId x = InstrScopeId x
+data InstrScopeId x = InstrScopeId Int
 data InstrScopeDecl ni e o = InstrScopeDecl (MDecl InstrScopeCmd ni e o)
 
 data InstrScopeCmd x ni e o where
@@ -131,6 +131,7 @@ data InstrScopeCmd x ni e o where
    InstrScopeContinueDecl :: ni -> InstrScopeCmd x ni e ()
    InstrScopeReturnDecl :: ni -> Maybe (ExprId x) -> InstrScopeCmd x ni e ()
    InstrScopeGoToDecl :: ExprId x -> InstrScopeCmd x ni e ()
+   InstrScopePutExprSt :: ExprId x -> InstrScopeCmd x ni e ()
 
 data ModuleDecl x ni e o = ModuleDecl (TaggedNode ni String) ( Asg x ni (ModuleCmd x ni) e o)
 
