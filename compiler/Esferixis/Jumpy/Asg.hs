@@ -1,5 +1,5 @@
 -- |
--- Module      :  Esferixis.Jumpy.AST
+-- Module      :  Esferixis.Jumpy.Asg
 -- Copyright   :  (c) 2019 Ariel Favio Carrizo
 -- License     :  BSD-3-Clause
 -- Stability   : experimental
