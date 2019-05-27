@@ -19,6 +19,7 @@ module Esferixis.Jumpy.Asg.Struct(
    ) where
 
 import Data.HashMap.Lazy as HM
+import Data.Either
 import Data.Maybe
 
 data StructBuildException m =
